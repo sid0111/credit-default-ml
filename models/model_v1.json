@@ -1,0 +1,52 @@
+{
+  "version": "v1",
+  "trained_at": "2026-10-05T10:24:11.823918+00:00",
+  "sklearn_version": "1.9.1",
+  "threshold": 0.15000000000000002,
+  "cost_fn": 5.0,
+  "cost_fp": 1.0,
+  "cv_roc_auc": 0.7862762903980917,
+  "test_metrics": {
+    "roc_auc": 0.7799513987180602,
+    "pr_auc": 0.560447656508641,
+    "brier": 0.13466363668714487,
+    "precision": 0.35122282608695654,
+    "recall": 0.7792012057272042,
+    "cost_per_customer": 0.5625,
+    "cost_flag_nobody": 1.1058333333333332,
+    "cost_flag_everybody": 0.7788333333333334,
+    "cost_rule_PAY_1": 0.6665
+  },
+  "best_params": {
+    "clf__l2_regularization": 17.052641538983092,
+    "clf__learning_rate": 0.1359792484318226,
+    "clf__max_iter": 443,
+    "clf__max_leaf_nodes": 7,
+    "clf__min_samples_leaf": 40
+  },
+  "input_columns": [
+    "LIMIT_BAL",
+    "SEX",
+    "EDUCATION",
+    "MARRIAGE",
+    "AGE",
+    "PAY_1",
+    "PAY_2",
+    "PAY_3",
+    "PAY_4",
+    "PAY_5",
+    "PAY_6",
+    "BILL_AMT1",
+    "BILL_AMT2",
+    "BILL_AMT3",
+    "BILL_AMT4",
+    "BILL_AMT5",
+    "BILL_AMT6",
+    "PAY_AMT1",
+    "PAY_AMT2",
+    "PAY_AMT3",
+    "PAY_AMT4",
+    "PAY_AMT5",
+    "PAY_AMT6"
+  ]
+}

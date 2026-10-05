@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest -v
+
+      - name: Build Docker image
+        run: docker build -t credit-default-api:ci .
+
+      - name: Smoke-test the container
+        run: |
+          docker run -d --name api -p 8000:8000 credit-default-api:ci
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && break
+            sleep 2
+          done
+          curl -sf http://localhost:8000/model-info
+          curl -sf -X POST http://localhost:8000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"LIMIT_BAL":120000,"EDUCATION":2,"PAY_1":3,"PAY_2":3,"PAY_3":3,"PAY_4":3,"PAY_5":3,"PAY_6":3,"BILL_AMT1":2682,"BILL_AMT2":1725,"BILL_AMT3":2682,"BILL_AMT4":3272,"BILL_AMT5":3455,"BILL_AMT6":3261,"PAY_AMT1":0,"PAY_AMT2":1000,"PAY_AMT3":1000,"PAY_AMT4":1000,"PAY_AMT5":0,"PAY_AMT6":2000}'
+          docker logs api
