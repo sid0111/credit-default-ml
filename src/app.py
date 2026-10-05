@@ -6,7 +6,8 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI
+import secrets
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 SRC_DIR = Path(__file__).resolve().parent
@@ -20,6 +21,12 @@ model = joblib.load(MODEL_DIR / f"{MODEL_NAME}.joblib")
 meta = json.loads((MODEL_DIR / f"{MODEL_NAME}.json").read_text())
 # The threshold is a business knob: override via env var, no retraining needed.
 THRESHOLD = float(os.getenv("THRESHOLD", meta["threshold"]))
+
+API_KEY = os.getenv("API_KEY")  # if unset, auth is off (local dev and tests)
+
+def require_key(x_api_key: str | None = Header(default=None)):
+    if API_KEY and not secrets.compare_digest(x_api_key or "", API_KEY):
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("credit-api")
@@ -78,20 +85,20 @@ def health():
     return {"status": "ok", "model_version": meta["version"]}
 
 
-@app.get("/model-info")
+@app.get("/model-info", dependencies=[Depends(require_key)])
 def model_info():
     return {"version": meta["version"], "trained_at": meta["trained_at"],
             "threshold": THRESHOLD, "test_metrics": meta["test_metrics"]}
 
 
-@app.post("/predict")
+@app.post("/predict", dependencies=[Depends(require_key)])
 def predict(applicant: Applicant):
     p = score([applicant])[0]
     log.info("prediction p=%.4f flagged=%s model=%s", p, p >= THRESHOLD, meta["version"])
     return result(p)
 
 
-@app.post("/predict/batch")
+@app.post("/predict/batch", dependencies=[Depends(require_key)])
 def predict_batch(batch: Batch):
     probs = score(batch.applicants)
     log.info("batch size=%d flagged=%d", len(probs), sum(p >= THRESHOLD for p in probs))

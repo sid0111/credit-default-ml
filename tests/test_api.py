@@ -48,3 +48,10 @@ def test_sensitive_field_rejected():
 def test_batch():
     r = client.post("/predict/batch", json={"applicants": [GOOD, GOOD]})
     assert r.status_code == 200 and len(r.json()["results"]) == 2
+
+def test_api_key_enforced(monkeypatch):
+    import src.app as appmod
+    monkeypatch.setattr(appmod, "API_KEY", "secret")
+    assert client.post("/predict", json=GOOD).status_code == 401
+    ok = client.post("/predict", json=GOOD, headers={"X-API-Key": "secret"})
+    assert ok.status_code == 200
